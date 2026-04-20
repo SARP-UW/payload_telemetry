@@ -12,11 +12,32 @@ HEADER = 0x4321
 PACKET_LENGTH = 38
 
 #big endian packet format
+#SHOULD STAY CONSISTENT, DO NOT WANT TO BE USING DIFFERENT FORMATS
 FORMAT = ">H f d d f f f"
 
-ser = serial.Serial('COM3', 9600, timeout=1)
-time.sleep(2)
+#object to connect to blackpill
+class RealSerial:
+    def __init__(self, port: str, baud: int = 9600, timeout: float = 1):
+        self.ser = serial.Serial(port,baud, timeout=timeout)
 
+    def read(self, n: int) -> bytes:
+        return self.ser.read(n)
+
+#object to test
+class FakeSerial:
+    def __init__(self, data: bytes):
+        self.data = data
+        self.index = 0
+    
+    def read(self, n: int) -> bytes:
+        if self.index >= len(self.data):
+            return b""
+        
+        chunk = self.data[self.index:self.index+n]
+        self.index += n
+        return chunk
+
+#reads packets through serial
 def read_packet(ser):
     while True:
         byte = ser.read(1)
@@ -31,7 +52,7 @@ def read_packet(ser):
                 rest = ser.read(PACKET_LENGTH - 2)
                 return byte + second + rest
 
-#two's complement checksum
+#constructs a checksum based on the bytes received
 def chksum(packet: bytes) -> int:
 
     #if packet is odd, add an empty bit to make it even (parity)
@@ -39,11 +60,13 @@ def chksum(packet: bytes) -> int:
     if len(packet) % 2 != 0:
         packet += b'\x00'
     
-    #array of unsigned shorts (2 bytes each)
-    #byte string is therefore made of 16-bit ints
-    arr = array.array("H", packet)
-    arr.byteswap()
-    res = sum(arr)
+    res = 0
+    
+    for i in range(0, len(packet), 2):
+        word = (packet[i] << 8) | packet[i+1]
+        res += word
+
+    res = (res & 0xFFFF) + (res >> 16)
 
     #two's complement (-res == ~res + 1)
     return (-res + 1) & 0xFFFF;       
@@ -64,18 +87,20 @@ def validate_packet(raw_packet: bytes):
 
     #check if raw packet is of expected length
     if len(raw_packet) != PACKET_LENGTH:
-        raise Exception("Raw packet: " + len(raw_packet) + " bytes. Expected " + PACKET_LENGTH + " bytes.")
+        raise Exception(f"Raw packet received: {len(raw_packet)} bytes. Expected {PACKET_LENGTH}")    
     
     #check if raw packet header is of expected header
     header = struct.unpack_from(">H", raw_packet, 0)[0]
     if header != HEADER:
-        raise Exception("Header received: " + header + ". Expected " + HEADER)
+        raise Exception(f"Header received: {header}. Expected {HEADER}")
     
     #checksum
-    expected_checksum = chksum(raw_packet[:36]) #stored in bytes 37 + 38 (int)
-    received_checksum = struct.unpack_from("<H", raw_packet, 36)[0]
+    expected_checksum = chksum(raw_packet[:36]) #stored in bytes 36 + 37 (int)
+
+    #>H = big endian, not sure if blackpill is little or big
+    received_checksum = struct.unpack_from(">H", raw_packet, 36)[0]
     if expected_checksum != received_checksum:
-        raise Exception("Checksum received: " + received_checksum + ". Expected " + expected_checksum)
+        raise Exception(f"Checksum received: {received_checksum}. Expected {expected_checksum}")
 
 #runs our validation checks, then constructs our validated packet
 def parse_packet(raw_packet: bytes) -> Packet:
@@ -85,8 +110,3 @@ def parse_packet(raw_packet: bytes) -> Packet:
     values = struct.unpack(FORMAT, body)
 
     return Packet(*values)
-    
-    
-
-
-    
