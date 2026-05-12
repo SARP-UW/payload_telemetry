@@ -45,19 +45,21 @@ def test_fake_stream():
 
         print(pkt)
 
-def real_stream():
-    real = bytestream.RealSerial('COM9')
+def real_stream(port: str):
+    real = bytestream.RealSerial(port)
 
     curr_time = "databases/" + str(datetime.now(timezone.utc).timestamp()) + ".db"
 
     while True:
+        # if serial has some tata
         raw = serial_ingestion.read_packet(real)
         pkt = packet_parser.parse_packet(raw)
 
-        datastore.store_data(curr_time, pkt)
+        # datastore.store_data(curr_time, pkt)
 
-        print(pkt)
+        print(bin(raw))
+        print(bin(pkt))
 
 if __name__ == "__main__":
-    test_fake_stream()
-    #real_stream()
+    #test_fake_stream()
+    real_stream('COM6')
