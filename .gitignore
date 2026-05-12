@@ -10,4 +10,3 @@ CMakeLists
 CMakePresets
 startup_stm32f401xc.s
 STM32F401XX_FLASH.ld
-UART
