@@ -1,5 +1,6 @@
 import struct
-from CONSTANTS import FORMAT, Packet
+
+from ground_station_software.src.constants import FORMAT, Packet
 
 def parse_packet(raw_packet: bytes) -> Packet:
 

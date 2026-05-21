@@ -1,5 +1,6 @@
 import struct
-from src.constants import HEADER, PACKET_LENGTH
+
+from ground_station_software.src.constants import HEADER, PACKET_LENGTH
 
 #constructs a checksum based on the bytes received
 def chksum(packet: bytes) -> int:

@@ -9,8 +9,6 @@ class RealSerial:
         return self.ser.read(n)
     
     def write(self, val: str):
-        print(f'writing ts shit: "{val}"')
-
         val = b'val\n'
 
         return self.ser.write(val)

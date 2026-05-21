@@ -1,13 +1,10 @@
 import random
 import struct
-
 from datetime import datetime, timezone
-from src.constants import FORMAT, HEADER
 
-import src.drivers.serial_ingestion as srl
-import src.drivers.bytestream as bytestream
-import src.drivers.datastore as datastore
-import src.parsers.packet_parser as packet_parser
+from ground_station_software.src.constants import FORMAT, HEADER
+from ground_station_software.src.drivers import bytestream, datastore, serial_ingestion
+from ground_station_software.src.parsers import packet_parser
 
 count = 0
 
@@ -27,7 +24,7 @@ def build_test_packet():
     header = struct.pack(">H", HEADER)
 
     raw = header + body
-    checksum = srl.chksum(raw[:36])
+    checksum = serial_ingestion.chksum(raw[:36])
     return raw + struct.pack(">H", checksum)
 
 def test_fake_stream():
@@ -37,9 +34,10 @@ def test_fake_stream():
     curr_time = "databases/" + str(datetime.now(timezone.utc).timestamp()) + ".db"
 
     for _ in range(10):
-        raw = srl.read_packet(fake)
+        raw = serial_ingestion.read_packet(fake)
         pkt = packet_parser.parse_packet(raw)
 
-        datastore.store_data(curr_time, pkt)
+        #datastore.store_data(curr_time, pkt)
 
+        print(raw)
         print(pkt)

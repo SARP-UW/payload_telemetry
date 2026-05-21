@@ -21,3 +21,4 @@ class Packet:
     altitude:  float   #4 byte float
     utc_time:  float   #4 byte float
     velocity:  float   #4 byte float
+

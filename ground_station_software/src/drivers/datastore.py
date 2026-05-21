@@ -2,10 +2,9 @@
 #jesus - https://docs.python.org/3/library/sqlite3.html
 
 import sqlite3
-
-from src import constants as constants
-from constants import Packet
 from dataclasses import asdict
+
+from ground_station_software.src.constants import Packet
 
 #assumes parsed packet
 def store_data(database: str, packet: Packet):
