@@ -5,7 +5,7 @@ import sqlite3
 import random
 from datetime import datetime, timezone
 
-DATABASE = 'databases/4-27-2026 database.db'
+DATABASE = 'databases.4-27-2026 database.db'
 
 connection = sqlite3.connect(DATABASE)
 

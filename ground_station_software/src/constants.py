@@ -10,7 +10,12 @@ PACKET_LENGTH = 38
 #big endian packet format
 #SHOULD STAY CONSISTENT, DO NOT WANT TO BE USING DIFFERENT FORMATS
 FORMAT = ">H f d d f f f"
+
+PAYLOAD_START = 2
+PAYLOAD_END = 36
       
+DATABASE = "ground_station_software\databases\TelemetryDatabase.db"
+
 #packet dataclass -  34 bytes
 @dataclass
 class Packet:

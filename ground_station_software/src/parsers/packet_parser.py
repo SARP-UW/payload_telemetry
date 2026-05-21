@@ -1,12 +1,21 @@
 import struct
-
-from ground_station_software.src.constants import FORMAT, Packet
+from ground_station_software.src.constants import FORMAT, PACKET_LENGTH, PAYLOAD_START, PAYLOAD_END, Packet
 
 def parse_packet(raw_packet: bytes) -> Packet:
+    """Packs validated raw bytes into uniform packets utilizing define packet structure
 
-    #w/ Chksum is 2:36
-    if (len(raw_packet) == 34):
-        body = raw_packet
+    Args:
+        raw_packet (bytes): Validated packet in raw bytes
+
+    Returns:
+        Packet: Uniform packet
+    """
+    
+    #full packet is 38 bytes, check if that is the case    
+    if (len(raw_packet) == PACKET_LENGTH):
+
+        #extract payload
+        body = raw_packet[PAYLOAD_START:PAYLOAD_END]
         values = struct.unpack(FORMAT, body)
 
         return Packet(*values)

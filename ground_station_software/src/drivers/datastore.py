@@ -3,11 +3,16 @@
 
 import sqlite3
 from dataclasses import asdict
-
 from ground_station_software.src.constants import Packet
 
 #assumes parsed packet
 def store_data(database: str, packet: Packet):
+    """Stores packets in local database given path and packet
+
+    Args:
+        database (str): Specified database path to save to
+        packet (Packet): Specified packet to save
+    """
 
     connection = sqlite3.connect(database)
 
@@ -38,5 +43,9 @@ def store_data(database: str, packet: Packet):
     connection.commit()
     connection.close()
 
+def query(database: str):
+    """Queries database for packet information
 
-#query
+    Args:
+        database (str): Specified database to query from
+    """
