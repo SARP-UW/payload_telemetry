@@ -5,6 +5,21 @@ import sqlite3
 from dataclasses import asdict
 from ground_station_software.src.constants import Packet
 
+def table_string(packet: Packet) -> str:
+
+    payload = asdict(packet)
+
+    string = ''
+
+    for field in payload:
+        value = str(payload.get(field))
+        string += value
+
+    return string
+
+def insertion_string(packet: Packet) -> str:
+    return ''
+
 #assumes parsed packet
 def store_data(database: str, packet: Packet):
     """Stores packets in local database given path and packet
@@ -38,6 +53,7 @@ def store_data(database: str, packet: Packet):
     cursor = connection.cursor()
 
     for row in cursor.execute('SELECT * FROM data'):
+        print('entered into database:')
         print(list(row))
 
     connection.commit()
@@ -49,3 +65,6 @@ def query(database: str):
     Args:
         database (str): Specified database to query from
     """
+
+
+    #search commands to find a value in a field

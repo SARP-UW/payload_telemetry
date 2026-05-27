@@ -2,7 +2,7 @@ import random
 import struct
 from datetime import datetime, timezone
 
-from ground_station_software.src.constants import FORMAT, HEADER, DATABASE
+from ground_station_software.src.constants import FORMAT, HEADER, PAYLOAD_START, PAYLOAD_END
 from ground_station_software.src.drivers import bytestream, datastore, serial_ingestion
 from ground_station_software.src.parsers import packet_parser
 
@@ -29,21 +29,21 @@ def build_test_packet() -> bytes:
     header = struct.pack(">H", HEADER)
 
     raw = header + body
-    checksum = serial_ingestion.checksum(raw[2:36])
+    checksum = serial_ingestion.checksum(raw[PAYLOAD_START:PAYLOAD_START])
     return raw + struct.pack(">H", checksum)
 
-def test_fake_stream():
+def test_fake_stream(times: int, database: str):
     """Creates and initializes a fake bytestream to emulate a COM port using the FakeSerial API
     """
 
-    packets = b"".join(build_test_packet() for _ in range(10))
+    packets = b"".join(build_test_packet() for _ in range(times))
     fake = bytestream.FakeSerial(packets)
 
-    for _ in range(10):
+    for _ in range(times):
         raw = serial_ingestion.read_packet(fake)
         pkt = packet_parser.parse_packet(raw)
 
-        datastore.store_data(DATABASE, pkt)
+        datastore.store_data(database, pkt)
 
         print(raw)
         print(pkt)
