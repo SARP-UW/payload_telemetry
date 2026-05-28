@@ -1,5 +1,6 @@
 .settings
-.pyc
+.py[codz]
+__pycache__/
 .vscode
 build
 cmake
