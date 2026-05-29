@@ -13,10 +13,10 @@ def parse_packet(raw_packet: bytes) -> Packet:
     
     print(len(raw_packet))
     #full packet is 38 bytes, check if that is the case    
-    if (len(raw_packet) == PACKET_LENGTH):
+    if (len(raw_packet) == 34):
 
         #extract payload
-        body = raw_packet[PAYLOAD_START:PAYLOAD_END]
+        body = raw_packet[0:PAYLOAD_END]
         values = struct.unpack(FORMAT, body)
 
         return Packet(*values)

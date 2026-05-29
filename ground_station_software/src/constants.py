@@ -5,7 +5,7 @@ from dataclasses import dataclass
 HEADER = 0x1234
 
 #2 + 34 + 2
-PACKET_LENGTH = 38
+PACKET_LENGTH = 34
 
 #big endian packet format
 #SHOULD STAY CONSISTENT, DO NOT WANT TO BE USING DIFFERENT FORMATS
@@ -14,7 +14,7 @@ FORMAT = ">H f d d f f f"
 PAYLOAD_START = 2
 PAYLOAD_END = 36
       
-DATABASE = 'ground_station_software\databases\TelemetryDatabase.db'
+DATABASE = 'ground_station_software\databases\TelemetryDatabase2.db'
 DATABASE2 = r'ground_station_software\databases\friday 5-22 testing database.db'
 
 #packet dataclass -  34 bytes

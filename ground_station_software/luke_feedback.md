@@ -1,0 +1,35 @@
+## Ground Station Software
+- General Notes
+    - Every function needs BERP comments in the function handle, or some sort of commenting. A reader should be able to know what the function does without reading the implementation code. Python docustrings are really clean, the `autoDocstring` plugin will make this super easy on vscode
+    - Nice job statically typing your parameters, consider doing this for your return values as well with the `-> type` syntax (I noticed you did this in most files after looking at bytestream.py, make sure to add that there). 
+    - Also consider adding the better comments plugin, its really nice for separating your comments.
+- File Structure Organization
+    - Delete `placeholder.txt`
+    - Rename the `Test App` folder to be more informative, or just let all files live in the `ground_station_software`
+    - Rename layers to be `src` or something similar, move `main.py` to this folder, and consider breaking the files within layers to `drivers` or `parsers` or something characterize what these files are. 
+    - Focus on making the file organization readable, such that you know the purpose of each subdivision of your code
+- `bytestream.py`
+    - RealSerial
+        - `val = b'val\n'`. This code sets the value parameter to be the literal bytecode for the string "val\n". If you want to wrap the string properly, you can do something like ` temp = f'{val}\n'.encode() ` This will wrap your value with a newline and then encode that output to be bytecode.
+        - Try not to change the value of parameters you are only reading, you can just pass `f'{val}\n'.encode()` into the write function directly instead of reassigning val. Or if you want the readability, use a temporary variable.
+    - FakeSerial 
+        - This is a nice idea for a testing api
+- `datastore.py`
+    - I've never worked with sqlite, but you can make your code more robust by instead of manually defining fields for both `connection.execute(...)` commands, create a function that uses the payload dictionary to generate a string for the `connection.execute(...)` commands. That way if you change your packet implementation, you wont need to change the implementation of this file.
+- `packet_parser.py`
+    - `2:36` are magic numbers, consider either adding a config file with defined constants inside with names, or if you can make these number dependant on the size of the packet class somehow that would be perfect. Either way, define those numbers as vars somewhere. 
+-  `serial_injestion.py`
+    - `HEADER`, `PACKET_LENGTH`, `FORMAT`, `class Packet` are defined constants which is very nice. I would consider making a general constants file where all the constants in your code live. So if someone reading your code finds a constant value, they know exactly where to find it. Same idea from the `packet_parser.py` feedback
+    - rename `chksum` to be `checksum` or even `crc`. This one is silly, but those are more professional names. 
+    - I dont know a lot about checksums addmittedly, some documentation of the checksum algorithm you used would be useful. 
+    - if you do decide to raise exceptions for a bad packet, the program will crash and be unrecoverable. Think of a different way you can handle bad information so that the program can recover if a bad packet is caught. Or, another way to do this is allow validate packet to throw errors, just wrap the call to validate packet in a `try .. catch` statement in `read_packet`. This way you can handle the error of a bad packet accordingly without halting your program. 
+- `main.py`
+    - abstract all of your tests elsewhere make a testing folder and have a file(s) dedicated to unit tests.  
+    - Magic numbers are ok in the `build_test_packet` function for the random values. 
+    - Magic `36` number in `build_test_packet`. 
+    - you use the number 10 as the number of test packets, define that as a constant so you can vary that number easily.
+    - Calling `read_packet` with no guarentee that the packet is in the serial buffer has undefined behavior, even worse that you need to parse the packet, parsing a bad packet also as undefined behavior. Think about how you flip this idea on its head. Right now you are constantly polling the serial port and grabbing whatever is there. Can you wait till you see your sync byte than catch the bytestream? Look into reading your serial buffer based on an interrupt. This way you only read the buffer when you know something is there. 
+- `testsql.py`
+    - A good test script calls your functions that you wrote, have this file use the functions from `datastore.py`
+
+    

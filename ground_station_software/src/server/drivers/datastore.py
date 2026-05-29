@@ -52,10 +52,6 @@ def store_data(database: str, packet: Packet):
 
     cursor = connection.cursor()
 
-    for row in cursor.execute('SELECT * FROM data'):
-        print('entered into database:')
-        print(list(row))
-
     connection.commit()
     connection.close()
 

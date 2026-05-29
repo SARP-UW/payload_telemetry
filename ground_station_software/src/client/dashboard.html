@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Sensor Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #1e2433;
+  }
+
+  header h1 { font-size: 18px; font-weight: 500; }
+
+  #status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+  #dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    transition: background 0.3s;
+  }
+  #dot.live { background: #22c55e; }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 0;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 140px;
+    background: #1a1f2e;
+    border: 1px solid #1e2433;
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+
+  .stat-card .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .value { font-size: 26px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat-card .unit  { font-size: 12px; color: #64748b; margin-left: 3px; }
+
+  .plots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+    padding: 16px 24px 24px;
+  }
+
+  .plot-wrap {
+    background: #1a1f2e;
+    border: 1px solid #1e2433;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .plot-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
+    padding: 12px 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Live Sensor Dashboard</h1>
+  <div id="status">
+    <div id="dot"></div>
+    <span id="status-text">Connecting…</span>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="label">Temperature</div>
+    <div class="value" id="sv-temp">—<span class="unit">°C</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Pressure</div>
+    <div class="value" id="sv-pres">—<span class="unit">Pa</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="label">RPM</div>
+    <div class="value" id="sv-rpm">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Status byte</div>
+    <div class="value" id="sv-status">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Packets received</div>
+    <div class="value" id="sv-count">0</div>
+  </div>
+</div>
+
+<div class="plots">
+  <div class="plot-wrap">
+    <div class="plot-title">Temperature (°C)</div>
+    <div id="plot-temp"></div>
+  </div>
+  <div class="plot-wrap">
+    <div class="plot-title">Pressure (Pa)</div>
+    <div id="plot-pres"></div>
+  </div>
+  <div class="plot-wrap">
+    <div class="plot-title">Acceleration X / Y</div>
+    <div id="plot-accel"></div>
+  </div>
+  <div class="plot-wrap">
+    <div class="plot-title">RPM</div>
+    <div id="plot-rpm"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const WS_URL    = "ws://localhost:8765";
+const MAX_POINTS = 200;   // rolling window
+
+// ── Shared plot theme ────────────────────────────────────────────────────────
+const LAYOUT_BASE = {
+  paper_bgcolor: "rgba(0,0,0,0)",
+  plot_bgcolor:  "rgba(0,0,0,0)",
+  margin: { t: 8, r: 16, b: 40, l: 56 },
+  height: 220,
+  font: { color: "#94a3b8", size: 11, family: "system-ui, sans-serif" },
+  xaxis: {
+    gridcolor: "#1e2433", zerolinecolor: "#1e2433",
+    tickformat: "%H:%M:%S", type: "date",
+  },
+  yaxis: { gridcolor: "#1e2433", zerolinecolor: "#1e2433" },
+  showlegend: false,
+};
+
+const CFG = { responsive: true, displayModeBar: false };
+
+function makeTrace(color, name = "") {
+  return {
+    x: [], y: [],
+    mode: "lines",
+    name,
+    line: { color, width: 1.8, shape: "linear" },
+    type: "scatter",
+  };
+}
+
+// ── Init plots ───────────────────────────────────────────────────────────────
+const traces = {
+  temp:   [makeTrace("#38bdf8")],
+  pres:   [makeTrace("#a78bfa")],
+  accelX: makeTrace("#34d399", "X"),
+  accelY: makeTrace("#fb923c", "Y"),
+  rpm:    [makeTrace("#f472b6")],
+};
+
+Plotly.newPlot("plot-temp",  traces.temp,  { ...LAYOUT_BASE }, CFG);
+Plotly.newPlot("plot-pres",  traces.pres,  { ...LAYOUT_BASE }, CFG);
+Plotly.newPlot("plot-accel", [traces.accelX, traces.accelY],
+  { ...LAYOUT_BASE, showlegend: true,
+    legend: { x: 0.02, y: 0.98, bgcolor: "rgba(0,0,0,0)", font: { color: "#94a3b8" } }
+  }, CFG);
+Plotly.newPlot("plot-rpm",   traces.rpm,   { ...LAYOUT_BASE }, CFG);
+
+// ── Stat helpers ─────────────────────────────────────────────────────────────
+let packetCount = 0;
+
+function setStat(id, value, decimals = 1) {
+  const el = document.getElementById(id);
+  const unit = el.querySelector(".unit");
+  const unitHtml = unit ? unit.outerHTML : "";
+  el.innerHTML = (typeof value === "number" ? value.toFixed(decimals) : value) + unitHtml;
+}
+
+// ── Push a point to a rolling trace array ────────────────────────────────────
+function push(arr, t, v) {
+  arr.x.push(t);
+  arr.y.push(v);
+  if (arr.x.length > MAX_POINTS) {
+    arr.x.shift();
+    arr.y.shift();
+  }
+}
+
+// ── Update all plots from one packet ─────────────────────────────────────────
+function ingestPacket(pkt) {
+  const t = new Date(pkt.received_at);
+  packetCount++;
+
+  push(traces.temp[0],  t, pkt.temp_c);
+  push(traces.pres[0],  t, pkt.pressure_pa);
+  push(traces.accelX,   t, pkt.accel_x);
+  push(traces.accelY,   t, pkt.accel_y);
+  push(traces.rpm[0],   t, pkt.rpm);
+
+  Plotly.react("plot-temp",  traces.temp,  { ...LAYOUT_BASE }, CFG);
+  Plotly.react("plot-pres",  traces.pres,  { ...LAYOUT_BASE }, CFG);
+  Plotly.react("plot-accel", [traces.accelX, traces.accelY],
+    { ...LAYOUT_BASE, showlegend: true,
+      legend: { x: 0.02, y: 0.98, bgcolor: "rgba(0,0,0,0)", font: { color: "#94a3b8" } }
+    }, CFG);
+  Plotly.react("plot-rpm",   traces.rpm,   { ...LAYOUT_BASE }, CFG);
+
+  setStat("sv-temp",   pkt.temp_c,      1);
+  setStat("sv-pres",   pkt.pressure_pa, 0);
+  setStat("sv-rpm",    pkt.rpm,         0);
+  setStat("sv-status", `0x${pkt.status.toString(16).toUpperCase().padStart(2,"0")}`, 0);
+  setStat("sv-count",  packetCount,     0);
+}
+
+// ── WebSocket connection ─────────────────────────────────────────────────────
+function connect() {
+  const dot  = document.getElementById("dot");
+  const text = document.getElementById("status-text");
+  const ws   = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    dot.classList.add("live");
+    text.textContent = "Live";
+  };
+
+  ws.onmessage = (ev) => {
+    try {
+      ingestPacket(JSON.parse(ev.data));
+    } catch (e) {
+      console.warn("Bad message:", ev.data, e);
+    }
+  };
+
+  ws.onclose = () => {
+    dot.classList.remove("live");
+    text.textContent = "Disconnected — retrying in 3 s";
+    setTimeout(connect, 3000);
+  };
+
+  ws.onerror = (e) => {
+    console.error("WS error:", e);
+    ws.close();
+  };
+}
+
+connect();
+</script>
+</body>
+</html>
