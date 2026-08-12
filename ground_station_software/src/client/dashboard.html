@@ -10,7 +10,7 @@
 
   body {
     font-family: system-ui, sans-serif;
-    background: #0f1117;
+    background: #6d09bf;
     color: #e2e8f0;
     min-height: 100vh;
   }
@@ -23,7 +23,10 @@
     border-bottom: 1px solid #1e2433;
   }
 
-  header h1 { font-size: 18px; font-weight: 500; }
+  header h1 { 
+    font-size: 18px; 
+    font-weight: 500; 
+  }
 
   #status {
     margin-left: auto;
@@ -35,12 +38,16 @@
   }
 
   #dot {
-    width: 8px; height: 8px;
+    width: 8px; 
+    height: 8px;
     border-radius: 50%;
     background: #ef4444;
     transition: background 0.3s;
   }
-  #dot.live { background: #22c55e; }
+
+  #dot.live { 
+    background: #22c55e; 
+  }
 
   .stats {
     display: flex;
@@ -58,9 +65,25 @@
     padding: 14px 18px;
   }
 
-  .stat-card .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat-card .value { font-size: 26px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .stat-card .unit  { font-size: 12px; color: #64748b; margin-left: 3px; }
+  .stat-card .label { 
+    font-size: 11px; 
+    color: #64748b; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+  }
+  
+  .stat-card .value { 
+    font-size: 26px; 
+    font-weight: 600; 
+    margin-top: 4px; 
+    font-variant-numeric: tabular-nums; 
+  }
+  
+  .stat-card .unit  { 
+    font-size: 12px; 
+    color: #64748b; 
+    margin-left: 3px; 
+  }
 
   .plots {
     display: grid;
