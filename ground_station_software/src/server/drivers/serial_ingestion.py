@@ -1,5 +1,5 @@
 import struct
-import numpy as np
+# import numpy as np
 from ground_station_software.src.constants import HEADER, PACKET_LENGTH, PAYLOAD_END, LengthException, HeaderException, ChecksumException
 from ground_station_software.src.server.drivers.bytestream import RealSerial, FakeSerial
 
