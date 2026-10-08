@@ -1,0 +1,12 @@
+{
+    "version:": "1.0",
+    "configurations": [
+        {
+            "gps": "-1",
+            "server": "-1",
+            "client": "-1",
+            "peripheral_count": "2"
+        }
+
+    ]
+}

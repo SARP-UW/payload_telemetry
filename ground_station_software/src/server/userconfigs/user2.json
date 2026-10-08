@@ -1,0 +1,13 @@
+{
+    "version": "1.0",
+    "configurations": [
+        {
+            "peripheral_id": "1",
+            "packet_len": "34",
+            "request": "launch",
+            "graph_1_type": "bar",
+            "graph_2_type": "pie",
+            "graph_3_type": "3d"
+        }
+    ]
+}
