@@ -11,7 +11,8 @@ from ground_station_software.src.server.drivers import bytestream
 count = 0
 
 def build_test_packet() -> bytes:
-    """Creates a fake packet for testing purposes
+    """
+    Creates a fake packet for testing purposes
 
     Returns:
         bytes: Returns a validated packet with randomly generated payload
@@ -35,7 +36,8 @@ def build_test_packet() -> bytes:
     return raw + struct.pack(">H", checksum)
 
 def test_fake_stream(times: int, database: str):
-    """Creates and initializes a fake bytestream to emulate a COM port using the FakeSerial API
+    """
+    Creates and initializes a fake bytestream to emulate a COM port using the FakeSerial API
     """
 
     packets = b"".join(build_test_packet() for _ in range(times))

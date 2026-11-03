@@ -85,7 +85,8 @@ def validate_packet(raw_packet: bytes):
 
 #reads packets through serial and returns validated packets
 def read_packet(ser: RealSerial | FakeSerial) -> bytes:
-    """Reads packets over the serial port
+    """
+    Reads packets over the serial port
 
     Args:
         ser (RealSerial, FakeSerial): Any serial port object
