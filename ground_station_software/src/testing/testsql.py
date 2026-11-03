@@ -1,6 +1,3 @@
-#bible - https://www.sqlitetutorial.net/
-#jesus - https://docs.python.org/3/library/sqlite3.html
-
 import sqlite3
 import random
 from datetime import datetime, timezone
@@ -9,8 +6,13 @@ DATABASE = 'databases.4-27-2026 database.db'
 
 connection = sqlite3.connect(DATABASE)
 
-connection.execute('''CREATE TABLE IF NOT EXISTS data
-                (packet_id, temp, lat, lon, alt, utc, vel)''')
+dictionary = {"packet_id": None, "temp": None, "lat": None, "lon": None, "alt": None, "utc": None, "vel": None}
+
+fields = list(dictionary.keys())
+sql_command = f'CREATE TABLE IF NOT EXISTS data ({", ".join(fields)})'
+
+
+connection.execute(sql_command)
 
 count = 0
 for flight in range(10):

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 HEADER = 0x1234
 
 #2 + 34 + 2
+# header + payload + checksum
 PACKET_LENGTH = 34
 
 #big endian packet format

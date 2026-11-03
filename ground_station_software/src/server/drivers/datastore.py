@@ -1,28 +1,11 @@
-#bible - https://www.sqlitetutorial.net/
-#jesus - https://docs.python.org/3/library/sqlite3.html
-
 import sqlite3
 from dataclasses import asdict
 from ground_station_software.src.constants import Packet
 
-def table_string(packet: Packet) -> str:
-
-    payload = asdict(packet)
-
-    string = ''
-
-    for field in payload:
-        value = str(payload.get(field))
-        string += value
-
-    return string
-
-def insertion_string(packet: Packet) -> str:
-    return ''
-
 #assumes parsed packet
 def store_data(database: str, packet: Packet):
-    """Stores packets in local database given path and packet
+    """
+    Stores packets in local database given path and packet
 
     Args:
         database (str): Specified database path to save to
@@ -31,36 +14,48 @@ def store_data(database: str, packet: Packet):
 
     connection = sqlite3.connect(database)
 
-    connection.execute('''CREATE TABLE IF NOT EXISTS data
-                    (packet_id, temp, lat, lon, alt, utc, vel)''')
-    
     payload = asdict(packet)
 
-    print(payload)
+    fields = list(payload.keys())
+    connection.execute(f'CREATE TABLE IF NOT EXISTS data ({", ".join(fields)})')
 
-    packet_id = payload.get("packet_id")
-    temp = payload.get("temp")
-    lat = payload.get("latitude")
-    lon = payload.get("longitude")
-    alt = payload.get("altitude")
-    utc = payload.get("utc_time")
-    vel = payload.get("velocity")
-
-    connection.execute(f'''INSERT INTO data VALUES('{packet_id}', '{temp}', 
-                                                '{lat}', '{lon}', '{alt}',
-                                                '{utc}', '{vel}')''')
-
-    cursor = connection.cursor()
+    values = [str(payload.get(field)) for field in fields]
+    connection.execute(f'''INSERT INTO data VALUES({", ".join(values)})''')
 
     connection.commit()
     connection.close()
 
 def query(database: str):
-    """Queries database for packet information
+    """
+    Queries database for packet information
 
     Args:
         database (str): Specified database to query from
     """
 
+    connection = sqlite3.connect(database)
+    cursor = connection.cursor()
 
-    #search commands to find a value in a field
+    for row in cursor.execute('SELECT * FROM data'):
+        print(list(row))
+
+    connection.close()
+
+
+#search commands to find a value in a field
+def search(database:str, field: str, value: str):
+    """
+    Searches database for a specific value in a given field
+
+    Args:
+        database (str): Specified database to search in
+        field (str): Field name to search in
+        value (str): Value to search for
+    """
+    connection = sqlite3.connect(database)
+    cursor = connection.cursor()
+
+    for row in cursor.execute(f'SELECT * FROM data WHERE {field} = "{value}"'):
+        print(list(row))
+
+    connection.close()

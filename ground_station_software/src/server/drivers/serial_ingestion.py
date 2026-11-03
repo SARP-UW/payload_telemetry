@@ -4,7 +4,8 @@ from ground_station_software.src.constants import HEADER, PACKET_LENGTH, PAYLOAD
 from ground_station_software.src.server.drivers.bytestream import RealSerial, FakeSerial
 
 def checksum(packet: bytes) -> int:
-    """Constructs a checksum based on the data received
+    """
+    Constructs a checksum based on the data received
 
     Args:
         packet (bytes): Specified packet payload in raw bytes
@@ -34,7 +35,8 @@ def checksum(packet: bytes) -> int:
     return (-res + 1) & 0xFFFF;
 
 def crc16(packet: bytes) -> int:
-    """Working implementation of a CRC 16 algorithm
+    """
+    Working implementation of a CRC 16 algorithm
 
     Args:
         packet (bytes): _description_
@@ -44,7 +46,8 @@ def crc16(packet: bytes) -> int:
     """
 
 def validate_packet(raw_packet: bytes):
-    """Checks all packets coming in for the right length, header and checksum
+    """
+    Checks all packets coming in for the right length, header and checksum
 
     Args:
         raw_packet (bytes): Specified packet in raw bytes
