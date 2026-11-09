@@ -4,7 +4,8 @@ Run from repo root:
     uvicorn ground_station_software.src.server.sockets.app:app --port 8000
 
 Endpoint: /ws [port TBD]. Message formats are PROVISIONAL (see packager.py,
-commands.py). Until the serial path is wired in, data comes from MockSource.
+commands.py). Data comes from MockSource unless GS_SOURCE=serial is set (see
+source_factory_from_env in sources.py).
 
 Integration point for the main loop: app.state.publish(StructuredPacket). It is
 safe to call from any thread and returns once the packet is handed to the
@@ -25,17 +26,15 @@ from ground_station_software.src.server.sockets.commands import handle_request
 from ground_station_software.src.server.sockets.config import CONFIG_DIR, load_slot_configs, resolve_slot_map
 from ground_station_software.src.server.sockets.packager import DataPackager
 from ground_station_software.src.server.sockets.registry import ConnectionRegistry
-from ground_station_software.src.server.sockets.sources import MockSource
+from ground_station_software.src.server.sockets.sources import MockSource, Publish, Source, source_factory_from_env
 from ground_station_software.src.server.sockets.structured import StructuredPacket
 
 logger = logging.getLogger("uvicorn.error")
 
-Publish = Callable[[StructuredPacket], None]
-
 
 def create_app(
     config_dir: Path = CONFIG_DIR,
-    source_factory: Callable[[Publish], MockSource] | None = MockSource,
+    source_factory: Callable[[Publish], Source] | None = MockSource,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -62,7 +61,9 @@ def create_app(
 
         app.state.publish = publish
 
-        task = asyncio.create_task(source_factory(publish).run()) if source_factory else None
+        source = source_factory(publish) if source_factory else None
+        task = asyncio.create_task(source.run()) if source else None
+        logger.info("ws_server: data source %s", type(source).__name__ if source else "none")
         try:
             yield
         finally:
@@ -125,4 +126,4 @@ def create_app(
     return app
 
 
-app = create_app()
+app = create_app(source_factory=source_factory_from_env())
