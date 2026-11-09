@@ -12,3 +12,6 @@ python -m ground_station_software.src.main
 # Don't run main.py at the same time: only one program can open the port.
 $env:GS_SOURCE = "serial"; $env:GS_SERIAL_PORT = "COM6"
 .\.venv\Scripts\python.exe -m uvicorn ground_station_software.src.server.sockets.app:app --port 8000
+
+# Dashboard, in a second terminal (needs Node.js; npm install only the first time)
+cd ground_station_software\src\client\dashboard; npm install; npm run dev

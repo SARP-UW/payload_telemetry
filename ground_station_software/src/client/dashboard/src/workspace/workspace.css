@@ -1,0 +1,323 @@
+/*
+ * Workspace: flat, high-contrast, utilitarian. Colour marks state only.
+ * No shadows, gradients, rounding or transitions. System fonts only
+ * (the ground station laptop may be offline).
+ */
+
+:root {
+  --bg: #0b0d0f;
+  --panel: #121518;
+  --head: #1a1e22;
+  --border: #3a4148;
+  --text: #e6e8ea;
+  --muted: #98a2ab; /* also chart text (LiveChart reads --muted, --border, --accent) */
+  --accent: #6cc4ff; /* chart line, module ids */
+  --focus: #ffffff;
+  --ok: #3fd07a;
+  --warn: #f0b43c;
+  --bad: #ff5d52;
+  --mono: ui-monospace, 'Cascadia Mono', Consolas, 'SF Mono', monospace;
+  --bar-h: 26px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 12px/1.3 var(--mono);
+}
+
+/* ---------- frame: canvas fills everything above a fixed-height bar ---------- */
+
+.ws {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--bar-h);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.canvas {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  margin: 1px;
+}
+
+.canvas-empty {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* ---------- modules ---------- */
+
+.module {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.module:focus {
+  outline: none;
+}
+
+.module:focus-visible {
+  border-color: var(--focus);
+}
+
+.module.dragging {
+  border-style: dashed;
+  border-color: var(--muted);
+}
+
+.mod-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  flex: 0 0 20px;
+  padding: 0 3px;
+  background: var(--head);
+  border-bottom: 1px solid var(--border);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mod-id {
+  color: var(--accent);
+  font-weight: 700;
+  min-width: 2.5ch;
+}
+
+.mod-head select {
+  height: 16px;
+  padding: 0 2px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.mod-stale {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.mod-close {
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font: inherit;
+  line-height: 14px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.mod-close:hover,
+.mod-close:focus-visible {
+  color: var(--bad);
+  border-color: var(--bad);
+  outline: none;
+}
+
+.mod-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.chart-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.mod-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--head);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.mod-resize:hover {
+  background: var(--border);
+}
+
+/* Drop target while dragging: green = valid, red = blocked. */
+.ghost {
+  position: absolute;
+  z-index: 3;
+  border: 2px solid var(--ok);
+  pointer-events: none;
+}
+
+.ghost.bad {
+  border-color: var(--bad);
+}
+
+.ghost span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 4px;
+  background: var(--bg);
+  color: var(--ok);
+}
+
+.ghost.bad span {
+  color: var(--bad);
+}
+
+/* ---------- command bar ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--bar-h);
+  padding: 0 6px;
+  background: var(--head);
+  border-top: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.prompt {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bar input {
+  flex: 0 1 380px;
+  min-width: 140px;
+  height: 18px;
+  padding: 0 4px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.bar input:focus {
+  outline: none;
+  border-color: var(--focus);
+}
+
+.result {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 12px;
+}
+
+/* ---------- help / log overlay (drawn over the canvas, never resizes it) ---------- */
+
+.overlay {
+  position: absolute;
+  z-index: 5;
+  left: 1px;
+  bottom: var(--bar-h);
+  width: min(820px, calc(100% - 2px));
+  max-height: 60%;
+  overflow: hidden;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.overlay table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 6px;
+}
+
+.overlay caption {
+  text-align: left;
+  color: var(--muted);
+  padding: 4px 0 2px;
+}
+
+.overlay td {
+  padding: 1px 8px 1px 0;
+  vertical-align: top;
+}
+
+.overlay .syntax {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.overlay .time {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.overlay-note {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ---------- state colours (result tones and health tones) ---------- */
+
+.t-ok,
+.t-good {
+  color: var(--ok);
+}
+
+.t-warn {
+  color: var(--warn);
+}
+
+.t-err,
+.t-bad {
+  color: var(--bad);
+}
+
+.t-info,
+.t-neutral {
+  color: var(--muted);
+}
